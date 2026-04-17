@@ -7,11 +7,14 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
+import os
+
 DB_CONFIG = {
-    "host":     "localhost",
-    "user":     "root",
-    "password": "Jp200706",
-    "database": "disk_problema_urbano"
+    "host":     os.environ.get("MYSQLHOST"),
+    "user":     os.environ.get("MYSQLUSER"),
+    "password": os.environ.get("MYSQLPASSWORD"),
+    "database": os.environ.get("MYSQLDATABASE"),
+    "port":     int(os.environ.get("MYSQLPORT", 3306))
 }
 
 def get_conn():
