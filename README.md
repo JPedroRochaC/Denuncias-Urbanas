@@ -1,6 +1,7 @@
 # 📢 Denúncias Urbanas
 
 Sistema web para registro e acompanhamento de problemas urbanos, como buracos, lixo irregular e falhas na iluminação pública.
+<img width="1903" height="902" alt="Captura de tela 2026-04-17 171203" src="https://github.com/user-attachments/assets/1b7d640c-3213-4781-8245-a6f1514201b4" />
 
 ---
 
