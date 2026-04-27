@@ -31,15 +31,21 @@ def init_db():
                 endereco   VARCHAR(255) NOT NULL,
                 descricao  TEXT NOT NULL,
                 status     ENUM('pendente','andamento','resolvido') DEFAULT 'pendente',
-                criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP
+                criado_em  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                criado_por VARCHAR(100) DEFAULT 'anonimo'
             )
         """)
+        # Adiciona coluna criado_por caso a tabela já exista sem ela
+        try:
+            cursor.execute("ALTER TABLE denuncias ADD COLUMN criado_por VARCHAR(100) DEFAULT 'anonimo'")
+        except Error:
+            pass  # coluna já existe, tudo bem
         conn.commit()
         cursor.close()
         conn.close()
-        print("✅ Banco conectado e tabela pronta!")
+        print("Banco conectado e tabela pronta!")
     except Error as e:
-        print(f"❌ Erro ao conectar no banco: {e}")
+        print(f"Erro ao conectar no banco: {e}")
 
 @app.route("/denuncias", methods=["GET"])
 def listar():
@@ -55,6 +61,9 @@ def listar():
             if isinstance(r["criado_em"], datetime):
                fuso_brasil = timezone(timedelta(hours=-3))
                r["criado_em"] = r["criado_em"].replace(tzinfo=timezone.utc).astimezone(fuso_brasil).strftime("%d/%m/%Y %H:%M")
+            # Garante que criado_por nunca venha None pro front
+            if not r.get("criado_por"):
+                r["criado_por"] = "anonimo"
 
         return jsonify(rows), 200
     except Error as e:
@@ -64,10 +73,11 @@ def listar():
 def criar():
     data = request.get_json()
 
-    tipo      = data.get("tipo", "").strip()
-    endereco  = data.get("endereco", "").strip()
-    descricao = data.get("descricao", "").strip()
-    status    = data.get("status", "pendente").strip()
+    tipo       = data.get("tipo", "").strip()
+    endereco   = data.get("endereco", "").strip()
+    descricao  = data.get("descricao", "").strip()
+    status     = data.get("status", "pendente").strip()
+    criado_por = data.get("criado_por", "anonimo").strip() or "anonimo"
 
     if not tipo or not endereco or not descricao:
         return jsonify({"erro": "Campos tipo, endereco e descricao são obrigatórios"}), 400
@@ -84,8 +94,8 @@ def criar():
         conn = get_conn()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO denuncias (tipo, endereco, descricao, status) VALUES (%s, %s, %s, %s)",
-            (tipo, endereco, descricao, status)
+            "INSERT INTO denuncias (tipo, endereco, descricao, status, criado_por) VALUES (%s, %s, %s, %s, %s)",
+            (tipo, endereco, descricao, status, criado_por)
         )
         conn.commit()
         novo_id = cursor.lastrowid
